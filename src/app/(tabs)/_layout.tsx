@@ -1,11 +1,14 @@
-import React from 'react';
+import { Feather } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import React from 'react';
 
 import { colors } from '../../constants';
 
 /**
- * Navegação principal (wireframes 2, 3 e 4): Início · Receitas · Contas.
- * TODO (aula): adicionar os ícones da tab bar (@expo/vector-icons ou expo-symbols).
+ * Navegação principal (Abas inferiores):
+ * 1. Início
+ * 2. Validar CEP
+ * 3. Configurações
  */
 export default function TabsLayout() {
   return (
@@ -17,12 +20,56 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
+          height: 60,
+          paddingBottom: 8,
+          paddingTop: 6,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '500',
         },
       }}
     >
-      <Tabs.Screen name="home" options={{ title: 'Início' }} />
-      <Tabs.Screen name="incomes" options={{ title: 'Receitas' }} />
-      <Tabs.Screen name="bills" options={{ title: 'Contas' }} />
+      <Tabs.Screen
+        name="home"
+        options={{
+          title: 'Início',
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="home" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="cep"
+        options={{
+          title: 'Validar CEP',
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="map-pin" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Configurações',
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="settings" size={size} color={color} />
+          ),
+        }}
+      />
+      {/* Esconde as rotas antigas de finanças da barra de abas caso ainda existam no diretório */}
+      <Tabs.Screen
+        name="incomes"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="bills"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }
