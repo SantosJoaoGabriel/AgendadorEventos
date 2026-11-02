@@ -1,12 +1,14 @@
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { Button, Card, Screen, ScreenHeader } from '../../components/ui';
 import { colors, radius, spacing, typography } from '../../constants';
 import { useAuthUser } from '../../features/auth';
 import { EventListItem, useEvents } from '../../features/events';
+
+const ITEMS_PER_PAGE = 5;
 
 function getGreeting(date: Date): string {
   const hour = date.getHours();
@@ -18,8 +20,27 @@ function getGreeting(date: Date): string {
 export default function HomeScreen() {
   const { user } = useAuthUser();
   const { events, loading } = useEvents();
+  const [currentPage, setCurrentPage] = useState(1);
 
   const displayName = user?.displayName || user?.email?.split('@')[0] || '';
+
+  // Cálculo da paginação
+  const totalPages = Math.ceil(events.length / ITEMS_PER_PAGE) || 1;
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const startIndex = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedEvents = events.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  function handlePrevPage() {
+    if (safeCurrentPage > 1) {
+      setCurrentPage((prev) => prev - 1);
+    }
+  }
+
+  function handleNextPage() {
+    if (safeCurrentPage < totalPages) {
+      setCurrentPage((prev) => prev + 1);
+    }
+  }
 
   return (
     <Screen>
@@ -49,6 +70,11 @@ export default function HomeScreen() {
 
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Seus Eventos</Text>
+        {events.length > 0 && (
+          <Text style={styles.pageIndicator}>
+            Página {safeCurrentPage} de {totalPages}
+          </Text>
+        )}
       </View>
 
       {loading && (
@@ -71,11 +97,39 @@ export default function HomeScreen() {
       )}
 
       {!loading && events.length > 0 && (
-        <View style={styles.list}>
-          {events.map((event) => (
-            <EventListItem key={event.id} event={event} />
-          ))}
-        </View>
+        <>
+          <View style={styles.list}>
+            {paginatedEvents.map((event) => (
+              <EventListItem key={event.id} event={event} />
+            ))}
+          </View>
+
+          {totalPages > 1 && (
+            <View style={styles.paginationRow}>
+              <Button
+                title="← Anterior"
+                variant="secondary"
+                onPress={handlePrevPage}
+                disabled={safeCurrentPage <= 1}
+                style={styles.paginationButton}
+              />
+
+              <View style={styles.pageBadge}>
+                <Text style={styles.pageBadgeText}>
+                  {safeCurrentPage} / {totalPages}
+                </Text>
+              </View>
+
+              <Button
+                title="Próxima →"
+                variant="secondary"
+                onPress={handleNextPage}
+                disabled={safeCurrentPage >= totalPages}
+                style={styles.paginationButton}
+              />
+            </View>
+          )}
+        </>
       )}
     </Screen>
   );
@@ -124,6 +178,11 @@ const styles = StyleSheet.create({
     ...typography.subheading,
     color: colors.text,
   },
+  pageIndicator: {
+    ...typography.caption,
+    color: colors.textMuted,
+    fontWeight: '500',
+  },
   loadingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -162,5 +221,31 @@ const styles = StyleSheet.create({
   },
   list: {
     gap: spacing.md,
+  },
+  paginationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: spacing.md,
+    gap: spacing.sm,
+  },
+  paginationButton: {
+    flex: 1,
+    height: 42,
+  },
+  pageBadge: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pageBadgeText: {
+    ...typography.caption,
+    fontWeight: '600',
+    color: colors.text,
   },
 });
